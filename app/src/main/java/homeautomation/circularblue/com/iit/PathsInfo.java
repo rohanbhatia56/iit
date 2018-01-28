@@ -13,7 +13,6 @@ public class PathsInfo {
         this.imagePath = imagePath;
         this.type = type;
     }
-
     public String videoPath;
     public String imagePath;
     public PathType type;

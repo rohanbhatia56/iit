@@ -3,6 +3,7 @@ package homeautomation.circularblue.com.iit;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -13,15 +14,24 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.iceteck.silicompressorr.SiliCompressor;
 
 import org.bytedeco.javacpp.avcodec;
@@ -43,6 +53,7 @@ enum Status
 class CurrentStatus{
     Status currentStatus = Status.NONE;
 }
+
 public class Record_Audio extends AppCompatActivity {
 
     LinearLayout action_panel_linearlayout;
@@ -61,7 +72,45 @@ public class Record_Audio extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record__audio);
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        myToolbar.setTitle(Singleton.getInstance().getUsername());
+        setSupportActionBar(myToolbar);
         init();
+    }
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_logout:
+
+                new AlertDialog.Builder(this)
+                        .setTitle("Closing application")
+                        .setMessage("Are you sure you want to logout?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                Singleton.getInstance().logout();
+                                Intent  intent = new Intent(Record_Audio.this,LoginScreen.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+
+                            }
+                        }).setNegativeButton("No", null).show();
+
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
     void init(){
 
@@ -215,9 +264,6 @@ public class Record_Audio extends AppCompatActivity {
 //        finish();
 
     }
-    void startVideoCompression(String path){
-        new VideoCompressAsyncTask(this).execute(Uri.fromFile(new File(path)).toString(),Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath());
-    }
     void startImageComression(String path){
         new ImageCompressionAsyncTask(this).execute(Uri.fromFile(new File(path)).toString(),Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath()) ;
     }
@@ -227,27 +273,21 @@ public class Record_Audio extends AppCompatActivity {
 
     public class GlueFilesTask extends AsyncTask<Void, Void, Void> {
 
-        ProgressDialog dialog;
         FFmpegFrameRecorder recorder;
         private String videoPath;
         Double frameRate=30.0;
         long startTime;
         String s;
         protected Void doInBackground(Void... arg0) {
-
             File folder = Environment.getExternalStorageDirectory();
             String path = folder.getAbsolutePath() + "/DCIM/Camera";
             Log.d("debug",path);
-            // ArrayList<String> paths = (ArrayList<String>) getListOfFiles(path, "jpg");
             long millis = System.currentTimeMillis();
 
             videoPath = path + "/" + "test_sham_"+millis+".mp4";
 
             try {
-                //audio grabber
-//                FrameGrabber grabber2 = new FFmpegFrameGrabber(folder.getAbsolutePath()+"/Samsung/Music/Over_the_horizon.mp3");
                 FrameGrabber grabber2 = new FFmpegFrameGrabber(singleton.getAudioPath());
-                //video grabber
 
                 FrameGrabber grabber1 = new FFmpegFrameGrabber(singleton.getImagePath());
                 grabber1.start();
@@ -279,14 +319,9 @@ public class Record_Audio extends AppCompatActivity {
                     recorder.record(frame1);
                     recorder.record(frame2);
                 }
-
                 recorder.stop();
-
                 grabber1.stop();
-
                 grabber2.stop();
-
-//                System.out.println("Total Time:- " + recorder.getTimestamp());
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -294,144 +329,134 @@ public class Record_Audio extends AppCompatActivity {
                     }
                 });
                 Log.d("debug","Total Time:- " + recorder.getTimestamp());
-//                singleton.setFinalVideoPath(s);
-
-     //           singleton.addVideoPath(s,singleton.getImagePath());
-                dialog.dismiss();
             } catch (Exception e) {
                 e.printStackTrace();
             }
             //startFileCompression(s);
-            goHome(s);
+          //  goHome(s);
+            upload(s);
             return null;
         }
-
-
         protected void onPostExecute(Long result){
-            dialog = new ProgressDialog(Record_Audio.this);
-            dialog.setMessage("Genrating video, Please wait.........");
-            dialog.setCancelable(false);
-            dialog.show();
+//            dialog = new ProgressDialog(Record_Audio.this);
+//            dialog.setMessage("Genrating video, Please wait.........");
+//            dialog.setCancelable(false);
+//            dialog.show();
         }
-
-
-
         protected void onPreExecute(){
-            dialog = new ProgressDialog(Record_Audio.this);
-            dialog.setMessage("Genrating video, Please wait.........");
-            dialog.setCancelable(false);
-            dialog.show();
+//            dialog = new ProgressDialog(Record_Audio.this);
+//            dialog.setMessage("Compressing and Genrating video, Please wait.........");
+//            dialog.setCancelable(false);
+//            dialog.show();
         };
     }
-    class VideoCompressAsyncTask extends AsyncTask<String, String, String> {
+    public void upload(final String compressedFilePath){
 
-        Context mContext;
+        Uri file = Uri.fromFile(new File(compressedFilePath));
+        long millis = System.currentTimeMillis();
+        StorageReference riversRef = Singleton.getInstance().getStorageRef().child(Singleton.getInstance().getUsername()+"/"+millis+"_VID.mp4");
 
-        public VideoCompressAsyncTask(Context context){
-            mContext = context;
-        }
+        riversRef.putFile(file)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // Get a URL to the uploaded content
+                        Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Singleton.getInstance().dissmissProgressDialog();
+                            }
+                        });
+                        goHome(compressedFilePath);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle unsuccessful uploads
+                        // ...
+//                        dialog.dismiss();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Singleton.getInstance().dissmissProgressDialog();
+                            }
+                        });
+                        Toast.makeText(Record_Audio.this, "Upload failed", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            final double progresss = (taskSnapshot.getBytesTransferred()/taskSnapshot.getTotalByteCount())*100.0;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Singleton.getInstance().setProgressDialogMessage("Uploading video, Please wait.........");
+                                    //((int)progresss) +"% Uploaded..."
+                                }
+                            });
+                    }
+                });
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-//        imageView.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_photo_camera_white_48px));
-//        compressionMsg.setVisibility(View.VISIBLE);
-//        picDescription.setVisibility(View.GONE);
-        }
-
-        @Override
-        protected String doInBackground(String... paths) {
-            String filePath = null;
-            try {
-
-                filePath = SiliCompressor.with(mContext).compressVideo(Uri.parse(paths[0]), paths[1]);
-
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-            return  filePath;
-        }
-        //7.67MB ->409MB
-        @Override
-        protected void onPostExecute(String compressedFilePath) {
-            super.onPostExecute(compressedFilePath);
-            File imageFile = new File(compressedFilePath);
-            float length = imageFile.length() / 1024f; // Size in KB
-            String value;
-            if(length >= 1024)
-                value = length/1024f+" MB";
-            else
-                value = length+" KB";
-//        String text = String.format(Locale.US, "%s\nName: %s\nSize: %s",  getString(R.string.video_compression_complete), imageFile.getName(), value);
-//        compressionMsg.setVisibility(View.GONE);
-//        picDescription.setVisibility(View.VISIBLE);
-//        picDescription.setText(text);
-            Log.d("debug", "Path: "+compressedFilePath);
-            goHome(compressedFilePath.trim());
-        }
     }
     class ImageCompressionAsyncTask extends AsyncTask<String, Void, String>{
-
         Context mContext;
-
         public ImageCompressionAsyncTask(Context context){
             mContext = context;
         }
 
         @Override
         protected String doInBackground(String... params) {
-
             String filePath = SiliCompressor.with(mContext).compress(params[0], new File(params[1]));
             return filePath;
 
-
-            /*
-            Bitmap compressBitMap = null;
-            try {
-                compressBitMap = SiliCompressor.with(mContext).getCompressBitmap(params[0], true);
-                return compressBitMap;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return compressBitMap;
-            */
+//            Bitmap compressBitMap = null;
+//            try {
+//                compressBitMap = SiliCompressor.with(mContext).getCompressBitmap(params[0], true);
+//                return compressBitMap;
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            return compressBitMap;
+//
         }
 
         @Override
         protected void onPostExecute(String s) {
-            /*
-            if (null != s){
-                imageView.setImageBitmap(s);
-                int compressHieght = s.getHeight();
-                int compressWidth = s.getWidth();
-                float length = s.getByteCount() / 1024f; // Size in KB;
-                String text = String.format("Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", "ff", length, compressWidth, compressHieght);
-                picDescription.setVisibility(View.VISIBLE);
-                picDescription.setText(text);
-            }
-            */
-
-            File imageFile = new File(s);
-            Uri compressUri = Uri.fromFile(imageFile);
-
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), compressUri);
-//                imageView.setImageBitmap(bitmap);
-
-                String name = imageFile.getName();
-                float length = imageFile.length() / 1024f; // Size in KB
-                int compressWidth = bitmap.getWidth();
-                int compressHieght = bitmap.getHeight();
-                String text = String.format(Locale.US, "Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", name, length, compressWidth, compressHieght);
-//                picDescription.setVisibility(View.VISIBLE);
-//                picDescription.setText(text);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
+//
+//            File imageFile = new File(s);
+//            Uri compressUri = Uri.fromFile(imageFile);
+//
+//            try {
+//                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), compressUri);
+//
+//                String name = imageFile.getName();
+//                float length = imageFile.length() / 1024f; // Size in KB
+//                int compressWidth = bitmap.getWidth();
+//                int compressHieght = bitmap.getHeight();
+//                String text = String.format(Locale.US, "Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", name, length, compressWidth, compressHieght);
+//
+//            }
+//            catch (IOException e) {
+//                e.printStackTrace();
+//            }
             singleton.setImagePath(s);
             startGlueTask();
         }
+        protected void onPreExecute(){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Singleton.getInstance().showProgressDialog(Record_Audio.this,"Compressing and Genrating video, Please wait.........");
+                }
+            });
+//            dialog = new ProgressDialog(Record_Audio.this);
+//            dialog.setMessage("Compressing and Genrating video, Please wait.........");
+//            dialog.setCancelable(false);
+//            dialog.show();
+        };
     }
 
 

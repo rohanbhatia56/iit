@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1049046061608",
+    "firebase_url": "https://iitg-123.firebaseio.com",
+    "project_id": "iitg-123",
+    "storage_bucket": "iitg-123.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049046061608:android:9f362c19630ad7f5",
+        "android_client_info": {
+          "package_name": "homeautomation.circularblue.com.iit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1049046061608-9kujk62e97c4blojciirbumb7jd627v4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "homeautomation.circularblue.com.iit",
+            "certificate_hash": "b5b79b3e1418b12c945c681444f2aeddb3adea2f"
+          }
+        },
+        {
+          "client_id": "1049046061608-bvnl8hkgv4tde1101g2c9pi1694f7jm8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7R0Bz0cMaZ6RGwS5IEaP6iaT_8fQtSTo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1049046061608-bvnl8hkgv4tde1101g2c9pi1694f7jm8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

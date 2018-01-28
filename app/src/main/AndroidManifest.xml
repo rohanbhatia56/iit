@@ -21,16 +21,20 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
+
+        </activity>
+        <activity android:name=".media_capture" />
+        <activity android:name=".Image_view" />
+        <activity android:name=".Record_Audio" />
+        <activity android:name=".Record_Video" />
+        <activity android:name=".LoginScreen" />
+        <activity android:name=".Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".media_capture" />
-        <activity android:name=".Image_view" />
-        <activity android:name=".Record_Audio" />
-        <activity android:name=".Record_Video"></activity>
     </application>
 
 </manifest>

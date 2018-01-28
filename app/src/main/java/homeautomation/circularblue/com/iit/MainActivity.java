@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -15,11 +16,15 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.support.v7.widget.AppCompatButton;
 //import android.widget.Button;
@@ -72,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        myToolbar.setTitle(Singleton.getInstance().getUsername());
+        setSupportActionBar(myToolbar);
         singleton = Singleton.getInstance();
         add_button = (Button) findViewById(R.id.add_button);
         videoView = (VideoView) findViewById(R.id.videoView);
@@ -96,17 +104,7 @@ public class MainActivity extends AppCompatActivity {
             mRecyclerView.setAdapter(mAdapter);
         }
 
-//        if(singleton.getVideoPaths().size()>0) {
-//            Log.d("debug","fasf");
-//            MediaController mediaController = new MediaController(this);
-//            mediaController.setAnchorView(videoView);
-//            mediaController.setMediaPlayer(videoView);
-//            videoView.setMediaController(mediaController);
-////            videoView.setVideoURI(singleton.getVideoURI());
-//            videoView.setVideoPath((singleton.getVideoPaths().get(0)));
-//            videoView.start();
-//            videoView.setZOrderOnTop(true);
-//        }
+
         add_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -118,6 +116,39 @@ public class MainActivity extends AppCompatActivity {
         init_cam();
         Toast.makeText(this, "str", Toast.LENGTH_SHORT).show();
 //        new DownloadFilesTask().execute();
+    }
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_logout:
+                new AlertDialog.Builder(this)
+                        .setTitle("Closing application")
+                        .setMessage("Are you sure you want to logout?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                Singleton.getInstance().logout();
+                                Intent  intent = new Intent(MainActivity.this,LoginScreen.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+
+                            }
+                        }).setNegativeButton("No", null).show();
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
     void init_player(){}
     protected void onStart(){
