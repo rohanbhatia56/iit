@@ -2,12 +2,16 @@ package homeautomation.circularblue.com.iit;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,6 +22,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.iceteck.silicompressorr.SiliCompressor;
+
 import org.bytedeco.javacpp.avcodec;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.FFmpegFrameRecorder;
@@ -26,6 +32,8 @@ import org.bytedeco.javacv.FrameGrabber;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Locale;
 
 
 enum Status
@@ -100,7 +108,8 @@ public class Record_Audio extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 singleton.setAudioPath(path);
-                new GlueFilesTask().execute();
+               // new GlueFilesTask().execute();
+                startImageComression(singleton.getImagePath());
 //                Intent intent = new Intent(Record_Audio.this, MainActivity.class);
 //                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
 //                startActivity(intent);
@@ -198,6 +207,24 @@ public class Record_Audio extends AppCompatActivity {
         mRecorder = null;
         Toast.makeText(this, "Recording stopped", Toast.LENGTH_SHORT).show();
     }
+    void goHome(String compressedFilePath){
+        Singleton.getInstance().addVideoPath(compressedFilePath);
+        Intent intent = new Intent(Record_Audio.this,MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+//        finish();
+
+    }
+    void startVideoCompression(String path){
+        new VideoCompressAsyncTask(this).execute(Uri.fromFile(new File(path)).toString(),Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath());
+    }
+    void startImageComression(String path){
+        new ImageCompressionAsyncTask(this).execute(Uri.fromFile(new File(path)).toString(),Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath()) ;
+    }
+    void startGlueTask(){
+        new GlueFilesTask().execute();
+    }
+
     public class GlueFilesTask extends AsyncTask<Void, Void, Void> {
 
         ProgressDialog dialog;
@@ -205,6 +232,7 @@ public class Record_Audio extends AppCompatActivity {
         private String videoPath;
         Double frameRate=30.0;
         long startTime;
+        String s;
         protected Void doInBackground(Void... arg0) {
 
             File folder = Environment.getExternalStorageDirectory();
@@ -225,13 +253,14 @@ public class Record_Audio extends AppCompatActivity {
                 grabber1.start();
                 grabber2.start();
 
-                String s = path + "/" + "test_sham_"+millis+".mp4";
+                s = path + "/" + "test_sham_"+millis+".mp4";
                 Log.d("debug","S = " + s);
                 recorder = new FFmpegFrameRecorder(s,  grabber1.getImageWidth(), grabber1.getImageHeight(),2);
 
                 //recorder.setVideoCodec(5);
-                recorder.setVideoCodec(avcodec.AV_CODEC_ID_MPEG4);
-                // recorder.setVideoCodec(avcodec.AV_CODEC_ID_MP4ALS);
+              //  recorder.setVideoCodec(avcodec.AV_CODEC_ID_AMR_NB);
+//                grabber.setVideoCodec(avcodec.AV_CODEC_ID_H264);
+
 
                // recorder.setFormat("3gp");
                 recorder.setFormat("mp4");
@@ -248,9 +277,7 @@ public class Record_Audio extends AppCompatActivity {
                         (frame2 = grabber2.grabFrame()) != null) {
 
                     recorder.record(frame1);
-
                     recorder.record(frame2);
-
                 }
 
                 recorder.stop();
@@ -268,14 +295,14 @@ public class Record_Audio extends AppCompatActivity {
                 });
                 Log.d("debug","Total Time:- " + recorder.getTimestamp());
 //                singleton.setFinalVideoPath(s);
-                singleton.addVideoPath(s);
-                Intent intent = new Intent(Record_Audio.this, MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
+
+     //           singleton.addVideoPath(s,singleton.getImagePath());
+                dialog.dismiss();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            //startFileCompression(s);
+            goHome(s);
             return null;
         }
 
@@ -296,6 +323,117 @@ public class Record_Audio extends AppCompatActivity {
             dialog.show();
         };
     }
+    class VideoCompressAsyncTask extends AsyncTask<String, String, String> {
+
+        Context mContext;
+
+        public VideoCompressAsyncTask(Context context){
+            mContext = context;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+//        imageView.setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_photo_camera_white_48px));
+//        compressionMsg.setVisibility(View.VISIBLE);
+//        picDescription.setVisibility(View.GONE);
+        }
+
+        @Override
+        protected String doInBackground(String... paths) {
+            String filePath = null;
+            try {
+
+                filePath = SiliCompressor.with(mContext).compressVideo(Uri.parse(paths[0]), paths[1]);
+
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+            return  filePath;
+        }
+        //7.67MB ->409MB
+        @Override
+        protected void onPostExecute(String compressedFilePath) {
+            super.onPostExecute(compressedFilePath);
+            File imageFile = new File(compressedFilePath);
+            float length = imageFile.length() / 1024f; // Size in KB
+            String value;
+            if(length >= 1024)
+                value = length/1024f+" MB";
+            else
+                value = length+" KB";
+//        String text = String.format(Locale.US, "%s\nName: %s\nSize: %s",  getString(R.string.video_compression_complete), imageFile.getName(), value);
+//        compressionMsg.setVisibility(View.GONE);
+//        picDescription.setVisibility(View.VISIBLE);
+//        picDescription.setText(text);
+            Log.d("debug", "Path: "+compressedFilePath);
+            goHome(compressedFilePath.trim());
+        }
+    }
+    class ImageCompressionAsyncTask extends AsyncTask<String, Void, String>{
+
+        Context mContext;
+
+        public ImageCompressionAsyncTask(Context context){
+            mContext = context;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            String filePath = SiliCompressor.with(mContext).compress(params[0], new File(params[1]));
+            return filePath;
+
+
+            /*
+            Bitmap compressBitMap = null;
+            try {
+                compressBitMap = SiliCompressor.with(mContext).getCompressBitmap(params[0], true);
+                return compressBitMap;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return compressBitMap;
+            */
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            /*
+            if (null != s){
+                imageView.setImageBitmap(s);
+                int compressHieght = s.getHeight();
+                int compressWidth = s.getWidth();
+                float length = s.getByteCount() / 1024f; // Size in KB;
+                String text = String.format("Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", "ff", length, compressWidth, compressHieght);
+                picDescription.setVisibility(View.VISIBLE);
+                picDescription.setText(text);
+            }
+            */
+
+            File imageFile = new File(s);
+            Uri compressUri = Uri.fromFile(imageFile);
+
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), compressUri);
+//                imageView.setImageBitmap(bitmap);
+
+                String name = imageFile.getName();
+                float length = imageFile.length() / 1024f; // Size in KB
+                int compressWidth = bitmap.getWidth();
+                int compressHieght = bitmap.getHeight();
+                String text = String.format(Locale.US, "Name: %s\nSize: %fKB\nWidth: %d\nHeight: %d", name, length, compressWidth, compressHieght);
+//                picDescription.setVisibility(View.VISIBLE);
+//                picDescription.setText(text);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            singleton.setImagePath(s);
+            startGlueTask();
+        }
+    }
+
 
 }
 

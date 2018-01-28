@@ -3,6 +3,8 @@ package homeautomation.circularblue.com.iit;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -30,7 +32,7 @@ public class Image_view extends AppCompatActivity {
 
         yes_button.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View view){
                 singleton.setImagePath(path);
                 Intent intent = new Intent(Image_view.this,Record_Audio.class);
                 startActivity(intent);
@@ -47,9 +49,14 @@ public class Image_view extends AppCompatActivity {
     }
     void loadImage(){
         path=getIntent().getExtras().getString("path");
-        Bitmap bitmap = BitmapFactory.decodeFile(path);
+      //  Bitmap bitmap = BitmapFactory.decodeFile(path);
         ImageView myImageView = (ImageView)findViewById(R.id.image_view);
+        Bitmap myBitmap  = BitmapFactory.decodeFile(path);
+        Bitmap bitmap = ExifUtil.rotateBitmap(path, myBitmap);
+
         myImageView.setImageBitmap(bitmap);
     }
+
+
 
 }

@@ -66,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
     private RecyclerView.Adapter mAdapter;
-    private ArrayList<Uri> mDataset;
+    private ArrayList<PathsInfo> mDataset;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,15 +77,18 @@ public class MainActivity extends AppCompatActivity {
         videoView = (VideoView) findViewById(R.id.videoView);
         novideos_textview = (TextView) findViewById(R.id.novideos_textView);
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        int size= singleton.getVideoURIs().size();
+        int size= singleton.getVideoPaths().size();
         Toast.makeText(this, "URIS = " + size , Toast.LENGTH_SHORT).show();
         if(size==0){
             recyclerView.setVisibility(View.GONE);
             novideos_textview.setVisibility(View.VISIBLE);
         }else {
+            for(int i=0;i<singleton.getVideoPaths().size();i++){
+                Log.d("debug","["+i+"] "+singleton.getVideoPaths().get(i));
+            }
             recyclerView.setVisibility(View.VISIBLE);
             novideos_textview.setVisibility(View.GONE);
-            mDataset = singleton.getVideoURIs();
+            mDataset = singleton.getVideoPaths();
             mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
             mLayoutManager = new LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false);
             mRecyclerView.setLayoutManager(mLayoutManager);
@@ -115,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "str", Toast.LENGTH_SHORT).show();
 //        new DownloadFilesTask().execute();
     }
+    void init_player(){}
     protected void onStart(){
         super.onStart();
     }
