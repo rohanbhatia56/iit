@@ -1,13 +1,18 @@
 package homeautomation.circularblue.com.iit;
 
+import android.*;
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -43,6 +48,7 @@ public class media_capture extends AppCompatActivity {
     private Uri fileUri;
     public static String path_video;
     public static final int MEDIA_TYPE_VIDEO = 2;
+    private int CAMERA_PERMISSION_CODE = 5;
     private static final int CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE = 200;
     //  public static VideocameraActivity ActivityContext =null;
     Button photo_button,video_button;
@@ -54,11 +60,44 @@ public class media_capture extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media_capture);
-
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         myToolbar.setTitle(Singleton.getInstance().getUsername());
         setSupportActionBar(myToolbar);
-        init_cam();
+        if(ContextCompat.checkSelfPermission(media_capture.this, android.Manifest.permission.CAMERA )== PackageManager.PERMISSION_GRANTED){
+            // Toast.makeText(MainActivity.this, "you have already granted CAMERA permission!", Toast.LENGTH_SHORT).show();
+            init_cam();
+
+        }else{
+            request_CAMERA_Permission();
+        }
+    }
+    private void request_CAMERA_Permission() {
+        if(ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.CAMERA)){
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("request camera Permission is needed")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            ActivityCompat.requestPermissions(media_capture.this,new String[]{android.Manifest.permission.CAMERA},CAMERA_PERMISSION_CODE);
+
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .create().show();
+        }else {
+
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.CAMERA},CAMERA_PERMISSION_CODE);
+            init_cam();
+            Toast.makeText(media_capture.this, "you have granted CAMERA permission!", Toast.LENGTH_SHORT).show();
+        }
     }
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
@@ -71,7 +110,7 @@ public class media_capture extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_logout:
                 new AlertDialog.Builder(this)
-                        .setTitle("Closing application")
+                        .setTitle("Logout")
                         .setMessage("Are you sure you want to logout?")
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
@@ -123,6 +162,7 @@ public class media_capture extends AppCompatActivity {
                 Uri outputFileUri = Uri.fromFile(newfile);
                 Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
+                cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(cameraIntent, TAKE_PHOTO_CODE);
             }
         });
@@ -244,7 +284,12 @@ public class media_capture extends AppCompatActivity {
                 Singleton.getInstance().addVideoURI(Uri.parse(path_video));
                 Singleton.getInstance().setVideoURL(path_video);
 //                Log.d("debug","PATH =" + data.getData().toString());
-
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Singleton.getInstance().showProgressDialog(media_capture.this,"Compressing, Please wait.........");
+                    }
+                });
                 new VideoCompressAsyncTask(this).execute(Uri.fromFile(new File(path_video)).toString(),Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath());
 
 //                try {
@@ -297,12 +342,7 @@ public class media_capture extends AppCompatActivity {
 //        compressionMsg.setVisibility(View.VISIBLE);
 //        picDescription.setVisibility(View.GONE);
 
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Singleton.getInstance().showProgressDialog(media_capture.this,"Compressing, Please wait.........");
-                }
-            });
+
         }
 
         @Override

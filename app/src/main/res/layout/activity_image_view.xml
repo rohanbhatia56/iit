@@ -13,8 +13,34 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:elevation="4dp"
+        android:titleTextColor="@android:color/white"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_weight="0.1"
+        android:weightSum="2">
+
+        <Button
+            android:id="@+id/yes_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@color/blue"
+            android:textColor="@android:color/white"
+            android:text="ACCEPT" />
+
+        <Button
+            android:id="@+id/no_button"
+            android:text="REJECT"
+            android:background="@android:color/holo_red_light"
+            android:textColor="@android:color/white"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent" />
+    </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -28,26 +54,6 @@
             android:layout_height="match_parent"
             android:layout_weight="1.05" />
     </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_weight="0.1"
-        android:weightSum="2">
 
-        <Button
-            android:id="@+id/yes_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="YES" />
-
-        <Button
-            android:id="@+id/no_button"
-            android:text="NO"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent" />
-    </LinearLayout>
 
 </LinearLayout>

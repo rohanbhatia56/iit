@@ -15,6 +15,8 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -58,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
     int TAKE_PHOTO_CODE = 0;
     public static int count = 0;
     TextView novideos_textview;
+    private int WRITE_EXTERNAL_STORAGE_PERMISSION_CODE = 2;
+    private int CAMERA_PERMISSION_CODE = 5;
 
     private RecordButton mRecordButton = null;
     private MediaRecorder mRecorder = null;
@@ -72,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mLayoutManager;
     private RecyclerView.Adapter mAdapter;
     private ArrayList<PathsInfo> mDataset;
+    private int READ_EXTERNAL_STORAGE_PERMISSION_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,13 +85,17 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         myToolbar.setTitle(Singleton.getInstance().getUsername());
         setSupportActionBar(myToolbar);
+
+
+
+
         singleton = Singleton.getInstance();
         add_button = (Button) findViewById(R.id.add_button);
         videoView = (VideoView) findViewById(R.id.videoView);
         novideos_textview = (TextView) findViewById(R.id.novideos_textView);
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         int size= singleton.getVideoPaths().size();
-        Toast.makeText(this, "URIS = " + size , Toast.LENGTH_SHORT).show();
+     //   Toast.makeText(this, "URIS = " + size , Toast.LENGTH_SHORT).show();
         if(size==0){
             recyclerView.setVisibility(View.GONE);
             novideos_textview.setVisibility(View.VISIBLE);
@@ -106,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         add_button.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this,media_capture.class);
@@ -114,9 +124,70 @@ public class MainActivity extends AppCompatActivity {
         });
         frameRate = 30.0;
         init_cam();
-        Toast.makeText(this, "str", Toast.LENGTH_SHORT).show();
+      //  Toast.makeText(this, "str", Toast.LENGTH_SHORT).show();
 //        new DownloadFilesTask().execute();
     }
+    protected void onStart(){
+        super.onStart();
+        if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE )== PackageManager.PERMISSION_GRANTED){
+           // Toast.makeText(this, "you have already granted WRITE_EXTERNAL_STORAGE permission!", Toast.LENGTH_SHORT).show();
+        }else{
+            request_WRITE_EXTERNAL_STORAGE_Permission();
+        }
+    }
+    private void request_CAMERA_Permission() {
+        if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)){
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("request camera Permission is needed")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.CAMERA},CAMERA_PERMISSION_CODE);
+
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .create().show();
+        }else {
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.CAMERA},CAMERA_PERMISSION_CODE);
+            Intent intent = new Intent(MainActivity.this,media_capture.class);
+            startActivity(intent);
+
+        }
+    }
+
+    private void request_WRITE_EXTERNAL_STORAGE_Permission() {
+        if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)){
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("write external storage Permission is needed")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},WRITE_EXTERNAL_STORAGE_PERMISSION_CODE);
+
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .create().show();
+        }else {
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},WRITE_EXTERNAL_STORAGE_PERMISSION_CODE);
+        }
+    }
+
+
+
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
@@ -128,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_logout:
                 new AlertDialog.Builder(this)
-                        .setTitle("Closing application")
+                        .setTitle("Logout")
                         .setMessage("Are you sure you want to logout?")
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
@@ -151,9 +222,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     void init_player(){}
-    protected void onStart(){
-        super.onStart();
-    }
+
 
     // Requesting permission to RECORD_AUDIO
     private boolean permissionToRecordAccepted = false;
@@ -302,13 +371,13 @@ public class MainActivity extends AppCompatActivity {
     }
     protected void onStop(){
         super.onStop();
-        Toast.makeText(this, "onStop", Toast.LENGTH_SHORT).show();
+  //    //  Toast.makeText(this, "onStop", Toast.LENGTH_SHORT).show();
     //    SendLoagcatMail();
     }
 
     protected void onDestroy(){
         super.onDestroy();
-        Toast.makeText(this, "DEST", Toast.LENGTH_SHORT).show();
+     //   Toast.makeText(this, "DEST", Toast.LENGTH_SHORT).show();
     }
 
 }

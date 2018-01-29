@@ -43,18 +43,27 @@ class Singleton {
         return mStorageRef;
     }
     public void showProgressDialog(Context context,String msg){
-
+        if(dialog!=null){
+            dialog.dismiss();
+            dialog=null;
+        }
         dialog = new ProgressDialog(context);
         dialog.setMessage(msg);
         dialog.setCancelable(false);
         dialog.show();
     }
     public void setProgressDialogMessage(String msg){
-        dialog.setMessage(msg);
+        if(dialog!=null) {
+            if (dialog.isShowing()) {
+                dialog.setMessage(msg);
+            }
+        }
     }
     public void dissmissProgressDialog(){
-        if(dialog.isShowing()){
-            dialog.dismiss();
+        if(dialog!=null) {
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
         }
     }
 
@@ -126,6 +135,7 @@ class Singleton {
 
     public void setUsername(String username) {
         this.username = username;
+        storage.save();
     }
     public boolean hasUsername(){
         if(!this.username.isEmpty()){
@@ -135,6 +145,7 @@ class Singleton {
     }
     public void logout(){
        storage.removekeys();
+        setVideoPaths(new ArrayList<PathsInfo>());
     }
 
     private String username="";

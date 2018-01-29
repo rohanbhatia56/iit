@@ -59,8 +59,15 @@ class MainAdapter extends RecyclerView.Adapter<MainAdapter.ViewHolder> {
 //
 //            holder.thumb.setImageURI(Uri.parse(pathsInfo.imagePath));
 //        }else {
-            holder.thumb.setImageBitmap(thumb);
+        holder.thumb.setImageBitmap(thumb);
      //   }
+        holder.mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                holder.play_image.setVisibility(View.VISIBLE);
+                holder.thumb.setVisibility(View.VISIBLE);
+            }
+        });
         holder.play_image.setVisibility(View.VISIBLE);
         holder.replay_image.setVisibility(View.GONE);
         holder.play_image.setOnClickListener(new View.OnClickListener() {

@@ -14,6 +14,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:elevation="4dp"
+        android:titleTextColor="@android:color/white"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
@@ -21,7 +22,10 @@
         android:id="@+id/add_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ADD" />
+        android:textColor="@android:color/white"
+        android:background="@color/blue"
+        android:textSize="40sp"
+        android:text="+" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
@@ -35,7 +39,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:text="CURRENT YOU HAVE NOT RECORDED ANY VIDEOS
+        android:text="CURRENTLY YOU HAVE NOT RECORDED ANY VIDEOS
          PLEASE ADD SOME"
         android:textColor="@android:color/black" />
 

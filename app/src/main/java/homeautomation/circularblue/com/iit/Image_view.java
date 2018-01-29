@@ -42,7 +42,7 @@ public class Image_view extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_logout:
                 new AlertDialog.Builder(this)
-                        .setTitle("Closing application")
+                        .setTitle("Logout")
                         .setMessage("Are you sure you want to logout?")
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override

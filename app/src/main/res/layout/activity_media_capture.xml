@@ -12,18 +12,23 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:elevation="4dp"
+        android:titleTextColor="@android:color/white"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
     <Button
         android:id="@+id/photo_button"
-        android:layout_width="match_parent"
+        android:layout_margin="40dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="PHOTO" />
+        android:background="@drawable/ic_camera" />
 
     <Button
         android:id="@+id/video_button"
-        android:layout_width="match_parent"
+        android:layout_margin="20dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="VIDEO" />
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/ic_video" />
 </LinearLayout>

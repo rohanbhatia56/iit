@@ -14,6 +14,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:elevation="4dp"
+        android:titleTextColor="@android:color/white"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
@@ -28,6 +29,8 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:gravity="center"
+            android:textSize="20dp"
+            android:textColor="@android:color/black"
             android:text="CLICK HERE TO RECORD AUDIO" />
     </LinearLayout>
 
@@ -36,17 +39,22 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:visibility="gone"
         android:layout_weight="0.1"
         android:weightSum="2">
         <Button
             android:id="@+id/yes_button"
-            android:text="YES"
+            android:text="ACCEPT"
             android:layout_weight="1"
+            android:textColor="@android:color/white"
+            android:background="@color/blue"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
         <Button
             android:id="@+id/no_button"
-            android:text="NO"
+            android:text="REJECT"
+            android:textColor="@android:color/white"
+            android:background="@android:color/holo_red_light"
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:layout_width="match_parent" />

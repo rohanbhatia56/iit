@@ -35,5 +35,7 @@
         android:layout_below="@+id/editText"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="46dp"
+        android:textColor="@android:color/white"
+        android:background="@color/blue"
         android:text="Login" />
 </RelativeLayout>

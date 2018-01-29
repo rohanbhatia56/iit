@@ -14,6 +14,8 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -55,7 +57,7 @@ class CurrentStatus{
 }
 
 public class Record_Audio extends AppCompatActivity {
-
+    private int RECORD_AUDIO_PERMISSION_CODE = 3;
     LinearLayout action_panel_linearlayout;
     Button yes_button,no_button;
     TextView textView;
@@ -75,7 +77,42 @@ public class Record_Audio extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         myToolbar.setTitle(Singleton.getInstance().getUsername());
         setSupportActionBar(myToolbar);
-        init();
+
+
+        if(ContextCompat.checkSelfPermission(Record_Audio.this, Manifest.permission.RECORD_AUDIO )== PackageManager.PERMISSION_GRANTED){
+            //Toast.makeText(this, "you have already granted RECORD_AUDIO permission!", Toast.LENGTH_SHORT).show();
+            init();
+        }else{
+            request_RECORD_AUDIO_PERMISSION_Permission();
+        }
+
+
+
+    }
+
+    private void request_RECORD_AUDIO_PERMISSION_Permission() {
+        if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)){
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("record audio Permission is needed")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            ActivityCompat.requestPermissions(Record_Audio.this,new String[]{Manifest.permission.RECORD_AUDIO},RECORD_AUDIO_PERMISSION_CODE);
+
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .create().show();
+        }else {
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.RECORD_AUDIO},RECORD_AUDIO_PERMISSION_CODE);
+            init();
+        }
     }
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
@@ -89,7 +126,7 @@ public class Record_Audio extends AppCompatActivity {
             case R.id.action_logout:
 
                 new AlertDialog.Builder(this)
-                        .setTitle("Closing application")
+                        .setTitle("Logout")
                         .setMessage("Are you sure you want to logout?")
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
@@ -156,7 +193,20 @@ public class Record_Audio extends AppCompatActivity {
         yes_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 singleton.setAudioPath(path);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                            Singleton.getInstance().showProgressDialog(Record_Audio.this,"Compressing and Genrating video, Please wait.........");
+
+                        }catch (Exception e){
+
+                        }
+                    }
+                });
+
                // new GlueFilesTask().execute();
                 startImageComression(singleton.getImagePath());
 //                Intent intent = new Intent(Record_Audio.this, MainActivity.class);
@@ -202,7 +252,8 @@ public class Record_Audio extends AppCompatActivity {
 
     private void startPlaying() {
         File folder = Environment.getExternalStorageDirectory();
-         path = folder.getAbsolutePath() + "/data/sound";
+        path = getExternalCacheDir().getAbsolutePath();
+        path += "/audiorecordtest.3gp";
         mPlayer = new MediaPlayer();
         mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -231,8 +282,12 @@ public class Record_Audio extends AppCompatActivity {
     }
 
     private void startRecording() {
-        File folder = Environment.getExternalStorageDirectory();
-         path = folder.getAbsolutePath() + "/data/sound";
+//        File folder = Environment.getExternalStorageDirectory();
+//         path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath().substring(8);//folder.getAbsolutePath();/// + "/data/sound";
+//        Log.d("debug", "path = " + path);
+
+        path = getExternalCacheDir().getAbsolutePath();
+        path += "/audiorecordtest.3gp";
 
         mRecorder = new MediaRecorder();
         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
@@ -242,11 +297,17 @@ public class Record_Audio extends AppCompatActivity {
 
         try {
             mRecorder.prepare();
+            mRecorder.start();
         } catch (IOException e) {
             Log.d("debug", "prepare() failed");
+            Log.d("debug",e.getMessage());
             Toast.makeText(this, "prepare() failed", Toast.LENGTH_SHORT).show();
+        }catch (IllegalStateException e) {
+            Log.d("debug", "start() IllegalStateException");
+            Toast.makeText(this, "start() IllegalStateException", Toast.LENGTH_SHORT).show();
         }
-        mRecorder.start();
+
+      ;
         Toast.makeText(this, "Recording started", Toast.LENGTH_SHORT).show();
     }
 
@@ -255,6 +316,7 @@ public class Record_Audio extends AppCompatActivity {
         mRecorder.release();
         mRecorder = null;
         Toast.makeText(this, "Recording stopped", Toast.LENGTH_SHORT).show();
+        action_panel_linearlayout.setVisibility(View.VISIBLE);
     }
     void goHome(String compressedFilePath){
         Singleton.getInstance().addVideoPath(compressedFilePath);
@@ -265,6 +327,7 @@ public class Record_Audio extends AppCompatActivity {
 
     }
     void startImageComression(String path){
+
         new ImageCompressionAsyncTask(this).execute(Uri.fromFile(new File(path)).toString(),Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath()) ;
     }
     void startGlueTask(){
@@ -285,7 +348,7 @@ public class Record_Audio extends AppCompatActivity {
             long millis = System.currentTimeMillis();
 
             videoPath = path + "/" + "test_sham_"+millis+".mp4";
-
+            Log.d("debug","AUDIO PATH = " + singleton.getAudioPath());
             try {
                 FrameGrabber grabber2 = new FFmpegFrameGrabber(singleton.getAudioPath());
 
@@ -411,7 +474,6 @@ public class Record_Audio extends AppCompatActivity {
         protected String doInBackground(String... params) {
             String filePath = SiliCompressor.with(mContext).compress(params[0], new File(params[1]));
             return filePath;
-
 //            Bitmap compressBitMap = null;
 //            try {
 //                compressBitMap = SiliCompressor.with(mContext).getCompressBitmap(params[0], true);
@@ -446,12 +508,7 @@ public class Record_Audio extends AppCompatActivity {
             startGlueTask();
         }
         protected void onPreExecute(){
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Singleton.getInstance().showProgressDialog(Record_Audio.this,"Compressing and Genrating video, Please wait.........");
-                }
-            });
+
 //            dialog = new ProgressDialog(Record_Audio.this);
 //            dialog.setMessage("Compressing and Genrating video, Please wait.........");
 //            dialog.setCancelable(false);
